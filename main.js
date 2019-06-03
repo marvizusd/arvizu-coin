@@ -9,11 +9,24 @@ class Block
         this.data = data;
         this.previousHash = previousHash;
         this.hash = this.calculateHash();
+        this.nonce = 0;
     }
 
     calculateHash()
     {
-        return SHA256(this.index + this.previousHash + this.timestamp + JSON.stringify(this.data)).toString();
+        return SHA256(this.index + this.previousHash + this.timestamp + JSON.stringify(this.data) + this.nonce).toString();
+    }
+
+    mineBlock(difficulty)
+    {
+        console.log(difficulty)
+        while(this.hash.substring(0, difficulty) !== Array(difficulty + 1).join("0"))
+        {
+            this.nonce++
+            this.hash = this.calculateHash();
+        }
+
+        console.log("Block mined: " + this.hash);
     }
 }
 
@@ -22,6 +35,7 @@ class BlockChain
     constructor()
     {
         this.chain = [this.createGenesisBlock()];
+        this.difficulty = 5;
     }
 
 
@@ -38,7 +52,8 @@ class BlockChain
     addBlock(newBlock)
     {
         newBlock.previousHash = this.getLatestBlock().hash;
-        newBlock.hash = newBlock.calculateHash();
+        newBlock.mineBlock(this.difficulty);
+        // newBlock.hash = newBlock.calculateHash();
         this.chain.push(newBlock);
     }
 
@@ -67,13 +82,10 @@ class BlockChain
 }
 
 let arvizuCoin = new BlockChain();
+
+console.log("Mining block 1....")
 arvizuCoin.addBlock(new Block(1, "06/01/2019", { amount: 4 }));
+
+
+console.log("Mining block 2....")
 arvizuCoin.addBlock(new Block(2, "06/02/2019", { amount: 10 }));
-
-console.log('Is blockchain valid?', arvizuCoin.isChainValid())
-
-arvizuCoin.chain[1].data = { amout: 100 };
-arvizuCoin.chain[1].hash = arvizuCoin.chain[1].calculateHash();
-
-console.log('Is blockchain valid?', arvizuCoin.isChainValid())
-console.log(JSON.stringify(arvizuCoin, null, 4))
